@@ -1,0 +1,23 @@
+# Node & Build
+/node_modules
+/.next
+/build
+/dist
+*.log
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+*.db
+*.sqlite
+
+# Environment
+.env
+.env.local
+
+# IDEs & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
