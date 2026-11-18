@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import Link from 'next/link';
 import { Kanban, FolderKanban, CheckCircle2, Clock, Plus, LayoutGrid } from 'lucide-react';
 
@@ -12,7 +12,28 @@ export default function FullstackDashboard() {
   ]);
 
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [apiStatus, setApiStatus] = useState<boolean | null>(null);
 
+  useEffect(()=>{
+    const fetchuser= async()=> {
+         try{
+          const response=await fetch("http://localhost:8000/health");
+          // const data=await response.json();
+
+          if(response.ok){
+            setApiStatus(true);
+          }
+          else{
+            setApiStatus(false)
+          }
+         }catch(error){
+          setApiStatus(false)
+         }      
+    }
+    fetchuser();
+
+  },[]);
+  
   function addTask(e: React.FormEvent) {
     e.preventDefault();
     if (!newTaskTitle.trim()) return;
@@ -111,6 +132,31 @@ export default function FullstackDashboard() {
           </div>
         </div>
       </main>
+<footer className="border-t border-slate-800 bg-slate-900 px-6 py-3 flex justify-end">
+  <span
+    style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '8px',
+      padding: '6px 14px',
+      borderRadius: '9999px',
+      fontSize: '12px',
+      fontWeight: 600,
+      backgroundColor: apiStatus === true ? '#052e16' : apiStatus === false ? '#450a0a' : '#1e293b',
+      color: apiStatus === true ? '#4ade80' : apiStatus === false ? '#f87171' : '#cbd5e1',
+      border: `1px solid ${apiStatus === true ? '#166534' : apiStatus === false ? '#991b1b' : '#475569'}`,
+    }}
+  >
+    <span>
+      ●
+    </span>
+    {apiStatus === null
+      ? 'Checking API...'
+      : apiStatus
+        ? 'API Connected'
+        : 'API Disconnected'}
+  </span>
+</footer>
     </div>
   );
 }
