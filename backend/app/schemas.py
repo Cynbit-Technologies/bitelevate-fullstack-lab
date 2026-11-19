@@ -16,6 +16,7 @@ class WorkspaceResponse(BaseModel):
 
 class ProjectCreate(BaseModel):
     name: str
+    client_name: str
     description: Optional[str] = None
     workspace_id: str
 
@@ -23,6 +24,7 @@ class ProjectResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: str
     name: str
+    client_name: str
     description: Optional[str]
     workspace_id: str
     created_at: datetime
