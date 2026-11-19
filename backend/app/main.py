@@ -53,7 +53,11 @@ def list_workspaces(db: Session = Depends(get_db)):
 # Projects
 @app.post("/api/v1/projects", response_model=ProjectResponse)
 def create_project(proj: ProjectCreate, db: Session = Depends(get_db)):
-    project = Project(name=proj.name, description=proj.description, workspace_id=proj.workspace_id)
+    project = Project(name=proj.name,
+                      client_name=proj.client_name,
+                      description=proj.description,
+                      workspace_id=proj.workspace_id
+                      )
     db.add(project)
     db.commit()
     db.refresh(project)
