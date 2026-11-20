@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List
 from datetime import datetime
 from app.models import TaskStatus
@@ -15,7 +15,7 @@ class WorkspaceResponse(BaseModel):
     created_at: datetime
 
 class ProjectCreate(BaseModel):
-    name: str
+    name: str = Field(min_length=3, max_length=100)
     client_name: str
     description: Optional[str] = None
     workspace_id: str
