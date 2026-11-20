@@ -32,7 +32,7 @@ class Project(Base):
     description = Column(Text, nullable=True)
     workspace_id = Column(String, ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-
+    client_name = Column(String(255), nullable=False)
     workspace = relationship("Workspace", back_populates="projects")
     tasks = relationship("Task", back_populates="project", cascade="all, delete-orphan")
 
