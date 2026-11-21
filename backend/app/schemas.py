@@ -34,11 +34,13 @@ class TaskCreate(BaseModel):
     description: Optional[str] = None
     status: TaskStatus = TaskStatus.TODO
     project_id: str
+    priority: str = "MEDIUM"
 
 class TaskUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     status: Optional[TaskStatus] = None
+    priority: Optional[str] = None
 
 class TaskResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -48,3 +50,4 @@ class TaskResponse(BaseModel):
     status: TaskStatus
     project_id: str
     created_at: datetime
+    priority: str

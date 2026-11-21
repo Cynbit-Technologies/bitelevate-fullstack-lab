@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 
 import CreateProjectModal from '@/components/CreateProjectModal';
+import TaskCard from '@/components/TaskCard';
 
 interface Project {
   id: string;
@@ -21,82 +22,108 @@ interface Project {
   created_at: string;
 }
 
-const WORKSPACE_ID = "83192aeb-67e9-40ce-9fb8-d822c6518d9b";
+type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE';
+type TaskPriority = 'HIGH' | 'MEDIUM' | 'LOW';
+
+interface Task {
+  id: string;
+  title: string;
+  status: TaskStatus;
+  project_id: string;
+  priority: TaskPriority;
+}
 
 export default function FullstackDashboard() {
-  const [tasks, setTasks] = useState([
-    { id: '1', title: 'Implement JWT Auth Endpoint', status: 'DONE', project: 'Backend API' },
-    { id: '2', title: 'Design Kanban Task Board UI', status: 'IN_PROGRESS', project: 'Frontend App' },
-    { id: '3', title: 'Docker Compose Postgres Setup', status: 'TODO', project: 'DevOps & Infra' },
-  ]);
-
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [apiStatus, setApiStatus] = useState<boolean | null>(null);
 
-  // Project states
   const [projects, setProjects] = useState<Project[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Fetch projects from backend
+  // Fetch all projects from the backend
   const fetchProjects = useCallback(async () => {
     try {
       const response = await fetch(
-        `http://localhost:8000/api/v1/projects?workspace_id=${WORKSPACE_ID}`
+        'http://localhost:8000/api/v1/projects'
       );
 
       if (!response.ok) {
-        throw new Error("Failed to fetch projects");
+        throw new Error('Failed to fetch projects');
       }
 
       const data: Project[] = await response.json();
       setProjects(data);
-
     } catch (error) {
-      console.error("Error fetching projects:", error);
+      console.error('Error fetching projects:', error);
     }
   }, []);
 
-  // Load projects when dashboard opens
+  // Fetch tasks inserted by seed_data.py
+  const fetchTasks = useCallback(async () => {
+    try {
+      const response = await fetch(
+        'http://localhost:8000/api/v1/tasks'
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch tasks');
+      }
+
+      const data: Task[] = await response.json();
+      setTasks(data);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+    }
+  }, []);
+
+  // Load projects and tasks when dashboard opens
   useEffect(() => {
     fetchProjects();
-  }, [fetchProjects]);
+    fetchTasks();
+  }, [fetchProjects, fetchTasks]);
 
   // Check backend API status
   useEffect(() => {
-    const fetchuser = async () => {
+    const checkAPI = async () => {
       try {
-        const response = await fetch("http://localhost:8000/health");
-
-        if (response.ok) {
-          setApiStatus(true);
-        } else {
-          setApiStatus(false);
-        }
+        const response = await fetch('http://localhost:8000/health');
+        setApiStatus(response.ok);
       } catch (error) {
         setApiStatus(false);
       }
     };
 
-    fetchuser();
+    checkAPI();
   }, []);
 
-  // Add task
+  // Add a temporary frontend task
   function addTask(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     if (!newTaskTitle.trim()) return;
 
-    setTasks([
-      ...tasks,
-      {
-        id: String(Date.now()),
-        title: newTaskTitle,
-        status: 'TODO',
-        project: 'Frontend App'
-      }
-    ]);
+    if (projects.length === 0) {
+      alert('Create a project before adding a task.');
+      return;
+    }
 
+    const newTask: Task = {
+      id: String(Date.now()),
+      title: newTaskTitle,
+      status: 'TODO',
+      project_id: projects[0].id,
+      priority: 'MEDIUM',
+    };
+
+    setTasks((previousTasks) => [...previousTasks, newTask]);
     setNewTaskTitle('');
+  }
+
+  // Find the project name using the task's project_id
+  function getProjectName(projectId: string) {
+    return projects.find((project) => project.id === projectId)?.name
+      ?? 'Unknown project';
   }
 
   return (
@@ -123,7 +150,7 @@ export default function FullstackDashboard() {
 
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
 
-        {/* Dashboard heading and Create Project button */}
+        {/* Dashboard heading */}
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-slate-100">
@@ -146,7 +173,6 @@ export default function FullstackDashboard() {
 
         {/* Projects section */}
         <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
-
           <h3 className="mb-4 text-lg font-semibold text-white">
             Your Projects ({projects.length})
           </h3>
@@ -157,7 +183,6 @@ export default function FullstackDashboard() {
             </p>
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-
               {projects.map((project) => (
                 <div
                   key={project.id}
@@ -172,7 +197,6 @@ export default function FullstackDashboard() {
                   </p>
                 </div>
               ))}
-
             </div>
           )}
         </div>
@@ -207,17 +231,22 @@ export default function FullstackDashboard() {
             <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-2">
               <h3 className="font-semibold text-slate-300 text-sm flex items-center gap-2">
                 <Clock className="w-4 h-4 text-amber-400" />
-                To Do ({tasks.filter(t => t.status === 'TODO').length})
+                To Do ({tasks.filter((task) => task.status === 'TODO').length})
               </h3>
             </div>
 
             <div className="space-y-3">
-              {tasks.filter(t => t.status === 'TODO').map(task => (
-                <div key={task.id} className="bg-slate-950 border border-slate-800 p-3 rounded-lg text-sm text-slate-200">
-                  <p className="font-medium">{task.title}</p>
-                  <span className="text-xs text-slate-500 mt-1 block">{task.project}</span>
-                </div>
-              ))}
+              {tasks
+                .filter((task) => task.status === 'TODO')
+                .map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    title={task.title}
+                    project={getProjectName(task.project_id)}
+                    priority={task.priority}
+                    status={task.status}
+                  />
+                ))}
             </div>
           </div>
 
@@ -226,17 +255,22 @@ export default function FullstackDashboard() {
             <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-2">
               <h3 className="font-semibold text-slate-300 text-sm flex items-center gap-2">
                 <FolderKanban className="w-4 h-4 text-blue-400" />
-                In Progress ({tasks.filter(t => t.status === 'IN_PROGRESS').length})
+                In Progress ({tasks.filter((task) => task.status === 'IN_PROGRESS').length})
               </h3>
             </div>
 
             <div className="space-y-3">
-              {tasks.filter(t => t.status === 'IN_PROGRESS').map(task => (
-                <div key={task.id} className="bg-slate-950 border border-slate-800 p-3 rounded-lg text-sm text-slate-200 border-l-4 border-l-blue-500">
-                  <p className="font-medium">{task.title}</p>
-                  <span className="text-xs text-slate-500 mt-1 block">{task.project}</span>
-                </div>
-              ))}
+              {tasks
+                .filter((task) => task.status === 'IN_PROGRESS')
+                .map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    title={task.title}
+                    project={getProjectName(task.project_id)}
+                    priority={task.priority}
+                    status={task.status}
+                  />
+                ))}
             </div>
           </div>
 
@@ -245,17 +279,22 @@ export default function FullstackDashboard() {
             <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-2">
               <h3 className="font-semibold text-slate-300 text-sm flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                Completed ({tasks.filter(t => t.status === 'DONE').length})
+                Completed ({tasks.filter((task) => task.status === 'DONE').length})
               </h3>
             </div>
 
             <div className="space-y-3">
-              {tasks.filter(t => t.status === 'DONE').map(task => (
-                <div key={task.id} className="bg-slate-950 border border-slate-800 p-3 rounded-lg text-sm text-slate-200 opacity-80">
-                  <p className="font-medium line-through text-slate-400">{task.title}</p>
-                  <span className="text-xs text-slate-500 mt-1 block">{task.project}</span>
-                </div>
-              ))}
+              {tasks
+                .filter((task) => task.status === 'DONE')
+                .map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    title={task.title}
+                    project={getProjectName(task.project_id)}
+                    priority={task.priority}
+                    status={task.status}
+                  />
+                ))}
             </div>
           </div>
 
@@ -287,7 +326,6 @@ export default function FullstackDashboard() {
           }}
         >
           <span>●</span>
-
           {apiStatus === null
             ? 'Checking API...'
             : apiStatus

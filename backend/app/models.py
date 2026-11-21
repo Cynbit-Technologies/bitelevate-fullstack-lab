@@ -43,7 +43,7 @@ class Task(Base):
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     status = Column(SQLEnum(TaskStatus), default=TaskStatus.TODO, nullable=False)
+    priority = Column(String, default="MEDIUM", nullable=False)
     project_id = Column(String, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-
     project = relationship("Project", back_populates="tasks")
