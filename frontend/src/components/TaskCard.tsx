@@ -20,7 +20,7 @@ export default function TaskCard({
 
   const statusStyles: Record<string, string> = {
     TODO: "",
-    IN_PROGRESS: "border-l-4 border-l-blue-500",
+    IN_PROGRESS: "border-l-4 border-l-emerald-500",
     DONE: "opacity-80",
   };
 

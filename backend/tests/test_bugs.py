@@ -8,7 +8,7 @@ client = TestClient(app)
 def test_disappearing_task_bug():
 
     response = client.patch(
-        "/api/v1/tasks/f69ec6b1-10bf-4fce-a9e8-620cb999b450",
+        "/api/v1/tasks/808fada8-8dfe-465e-8065-26822ebfdabd",
         json={
             "status": "in_progress"
         }

@@ -1,11 +1,20 @@
 
 'use client';
 
-import React, { useState, type FormEvent } from 'react';
+import React from 'react';
+
+import { useForm } from 'react-hook-form';
+
+
+
 
 interface CreateProjectModalProps {
   onClose: () => void;
   onProjectCreated: () => void;
+}
+interface ProjectFormData {
+  name: string;
+  client_name: string;
 }
 
 const CreateProjectModal = ({
@@ -13,45 +22,42 @@ const CreateProjectModal = ({
   onProjectCreated
 }: CreateProjectModalProps) => {
 
-  const [projectname, setprojectname] = useState<string>("");
-  const [clientname, setclientname] = useState<string>("");
 
-  const handleprojectsubmission = async (
-    e: FormEvent<HTMLFormElement>
-  ): Promise<void> => {
+const {
+  register,
+  handleSubmit,
+  formState: { errors }
+} = useForm<ProjectFormData>();
 
-    e.preventDefault();
+ const handleprojectsubmission = async (formData: ProjectFormData) => {
+     try{
+         const response=await fetch(
+          "http://localhost:8000/api/v1/projects",
+          {
+            method:'POST',
+            headers:{
+              "Content-Type": "application/json"
+            },
+            body:JSON.stringify({
+              name:formData.name,
+              client_name:formData.client_name,
+              workspace_id:"83192aeb-67e9-40ce-9fb8-d822c6518d9b"
+            })
+          }
+         );
+         if(!response.ok){
+          throw new Error("Failed to create project");
+         }
+         const data= await response.json();
 
-    try {
-      const response = await fetch("http://localhost:8000/api/v1/projects", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: projectname,
-          client_name: clientname,
-          workspace_id: "83192aeb-67e9-40ce-9fb8-d822c6518d9b"
-        })
-      });
+         console.log("project created",data);
 
-      if (!response.ok) {
-        throw new Error("Failed to create project");
-      }
-
-      const data = await response.json();
-
-      console.log("Project created:", data);
-
-      setprojectname("");
-      setclientname("");
-
-      onProjectCreated();
-      onClose();
-
-    } catch (error) {
-      console.log("Error creating project:", error);
-    }
+         onProjectCreated();
+         onClose();
+     }
+     catch(error){
+         console.log("Error creating project:",error);
+     }
   };
 
   return (
@@ -62,7 +68,7 @@ const CreateProjectModal = ({
           Create New Project
         </h2>
 
-        <form onSubmit={handleprojectsubmission}>
+        <form onSubmit={handleSubmit(handleprojectsubmission)}>
 
           <div className="mb-4">
             <label htmlFor="projectname" className="mb-2 block text-sm text-white">
@@ -72,11 +78,19 @@ const CreateProjectModal = ({
             <input
               type="text"
               id="projectname"
-              value={projectname}
-              onChange={(e) => setprojectname(e.target.value)}
+              {...register("name", {
+              required: "Project name is required",
+              validate: (value) =>
+              value.trim().length >= 3 ||
+              "Project name must be at least 3 characters"
+              })}
               className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white"
-              required
             />
+            {errors.name && (
+            <p className="mt-2 text-sm text-red-400">
+            {errors.name.message?.toString()}
+             </p>
+            )}
           </div>
 
           <div className="mb-5">
@@ -87,11 +101,14 @@ const CreateProjectModal = ({
             <input
               type="text"
               id="clientname"
-              value={clientname}
-              onChange={(e) => setclientname(e.target.value)}
               className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white"
-              required
+              {...register('client_name',{required:"client name is required"})}
             />
+            {errors.client_name && (
+            <p className="mt-2 text-sm text-red-400">
+            {errors.client_name.message?.toString()}
+            </p>
+            )}
           </div>
 
           <div className="flex justify-end gap-3">
