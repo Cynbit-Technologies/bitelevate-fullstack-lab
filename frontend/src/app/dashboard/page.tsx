@@ -2,16 +2,10 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Kanban,
-  FolderKanban,
-  CheckCircle2,
-  Clock,
-  Plus,
-} from 'lucide-react';
+import { Kanban, Plus } from 'lucide-react';
 
 import CreateProjectModal from '@/components/CreateProjectModal';
-import TaskCard from '@/components/TaskCard';
+import KanbanBoard from '@/components/KanbanBoard';
 
 interface Project {
   id: string;
@@ -120,12 +114,6 @@ export default function FullstackDashboard() {
     setNewTaskTitle('');
   }
 
-  // Find the project name using the task's project_id
-  function getProjectName(projectId: string) {
-    return projects.find((project) => project.id === projectId)?.name
-      ?? 'Unknown project';
-  }
-
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col">
 
@@ -224,81 +212,12 @@ export default function FullstackDashboard() {
         </form>
 
         {/* Kanban Board */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <KanbanBoard
+          tasks={tasks}
+          projects={projects}
+          setTasks={setTasks}
+        />
 
-          {/* To Do */}
-          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
-            <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-2">
-              <h3 className="font-semibold text-slate-300 text-sm flex items-center gap-2">
-                <Clock className="w-4 h-4 text-amber-400" />
-                To Do ({tasks.filter((task) => task.status === 'TODO').length})
-              </h3>
-            </div>
-
-            <div className="space-y-3">
-              {tasks
-                .filter((task) => task.status === 'TODO')
-                .map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    title={task.title}
-                    project={getProjectName(task.project_id)}
-                    priority={task.priority}
-                    status={task.status}
-                  />
-                ))}
-            </div>
-          </div>
-
-          {/* In Progress */}
-          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
-            <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-2">
-              <h3 className="font-semibold text-slate-300 text-sm flex items-center gap-2">
-                <FolderKanban className="w-4 h-4 text-blue-400" />
-                In Progress ({tasks.filter((task) => task.status === 'IN_PROGRESS').length})
-              </h3>
-            </div>
-
-            <div className="space-y-3">
-              {tasks
-                .filter((task) => task.status === 'IN_PROGRESS')
-                .map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    title={task.title}
-                    project={getProjectName(task.project_id)}
-                    priority={task.priority}
-                    status={task.status}
-                  />
-                ))}
-            </div>
-          </div>
-
-          {/* Completed */}
-          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
-            <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-2">
-              <h3 className="font-semibold text-slate-300 text-sm flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                Completed ({tasks.filter((task) => task.status === 'DONE').length})
-              </h3>
-            </div>
-
-            <div className="space-y-3">
-              {tasks
-                .filter((task) => task.status === 'DONE')
-                .map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    title={task.title}
-                    project={getProjectName(task.project_id)}
-                    priority={task.priority}
-                    status={task.status}
-                  />
-                ))}
-            </div>
-          </div>
-
-        </div>
       </main>
 
       {/* Create Project Modal */}
